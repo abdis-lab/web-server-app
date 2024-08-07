@@ -3,12 +3,15 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import Movie from './itemModel.js'; // Import the Movie model
-import db from './db.js'; // Ensure this file connects to the database
+import db from './db.js'; 
 
 dotenv.config();
 
 const app = express();
 const port = 3000;
+
+// Set EJS as the view engine
+app.set('view engine', 'ejs');
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -16,9 +19,31 @@ app.use(express.json());
 // Middleware to enable CORS
 app.use(cors());
 
-// API Routes
+// Route to render home page with items
+app.get('/', async (req, res) => {
+  try {
+    const items = await Movie.find();
+    res.render('home', { items: JSON.stringify(items) });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
+  }
+});
 
-// GET all items
+// Route to render detail page for a specific movie
+app.get('/detail/:id', async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (movie) {
+      res.render('detail', { movie });
+    } else {
+      res.status(404).send('Movie not found');
+    }
+  } catch (err) {
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Existing API Routes (for reference)
 app.get('/api/items', async (req, res) => {
   try {
     const movies = await Movie.find();
@@ -28,7 +53,6 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
-// GET a single item by ID
 app.get('/api/items/:id', async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id);
@@ -42,7 +66,6 @@ app.get('/api/items/:id', async (req, res) => {
   }
 });
 
-// DELETE an item by ID
 app.delete('/api/items/:id', async (req, res) => {
   try {
     const result = await Movie.deleteOne({ _id: req.params.id });
@@ -56,17 +79,14 @@ app.delete('/api/items/:id', async (req, res) => {
   }
 });
 
-// POST to add or update an item
 app.post('/api/items', async (req, res) => {
   try {
     const { _id, title, director, year, genre, rating, duration, synopsis } = req.body;
     if (!_id) {
-      // Add new item
       const newMovie = new Movie({ title, director, year, genre, rating, duration, synopsis });
       await newMovie.save();
       res.status(201).json(newMovie);
     } else {
-      // Update existing item
       const updatedMovie = await Movie.findByIdAndUpdate(
         _id,
         { title, director, year, genre, rating, duration, synopsis },
@@ -83,7 +103,6 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
