@@ -1,5 +1,5 @@
 import http from 'http';
-import Movie from './movieModel.js'; // Import the Movie model
+import Movie from './itemModel.js'; // Import the Movie model
 import db from './db.js';
 
 const hostname = 'localhost';
