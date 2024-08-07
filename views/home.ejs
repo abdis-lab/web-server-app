@@ -1,35 +1,190 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Home</title>
+  <title>Movie Database</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      max-width: 1200px;
+      width: 100%;
+    }
+    .header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .content {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      gap: 20px;
+    }
+    .movie-list, .movie-detail {
+      flex: 1;
+      margin: 0 10px;
+    }
+    .movie-card {
+      background-color: #fff;
+      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .movie-card:hover {
+      background-color: #f9f9f9;
+    }
+    .movie-detail .movie-card {
+      cursor: default;
+    }
+    .movie-detail form {
+      display: flex;
+      flex-direction: column;
+    }
+    .movie-detail label {
+      margin-top: 10px;
+    }
+    .movie-detail input {
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .movie-detail button {
+      margin-top: 20px;
+      padding: 10px 15px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .movie-detail button:hover {
+      background-color: #2980b9;
+    }
+    .movie-detail h2 {
+      margin: 0 0 20px;
+    }
+    .movie-card h2, .movie-card p {
+      margin: 0 0 10px;
+    }
+    .rating i {
+      color: gold;
+    }
+    .clear-btn {
+      background-color: #e74c3c;
+    }
+    .clear-btn:hover {
+      background-color: #c0392b;
+    }
+  </style>
   <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-  <div id="root"></div>
+  <div class="container">
+    <div class="header">
+      <h1>Movie Database</h1>
+    </div>
+    <div class="content">
+      <div class="movie-list" id="movie-list"></div>
+      <div class="movie-detail" id="movie-detail"></div>
+    </div>
+  </div>
   <script type="text/babel">
-    // Create a variable with unescaped JS data from server
     const items = <%- items %>;
 
-    
-    const Item = ({ item }) => (
-      <li onClick={() => window.location.href = `/detail/${item._id}`}>
-        {item.title}
-      </li>
+    const Item = ({ item, onSelect }) => (
+      <div className="movie-card" onClick={() => onSelect(item)}>
+        <h2>{item.title}</h2>
+        <p><strong>Director:</strong> {item.director}</p>
+        <p><strong>Year:</strong> {item.year}</p>
+        <p><strong>Genre:</strong> {item.genre}</p>
+        <p className="rating"><strong>Rating:</strong> {item.rating} <i className="fas fa-star"></i></p>
+        <p className="duration"><strong>Duration:</strong> {item.duration} mins</p>
+      </div>
     );
 
-
-    const ItemList = ({ items }) => (
-      <ul>
+    const ItemList = ({ items, onSelect }) => (
+      <div>
         {items.map(item => (
-          <Item key={item._id} item={item} />
+          <Item key={item._id} item={item} onSelect={onSelect} />
         ))}
-      </ul>
+      </div>
     );
 
-    // Render the ItemList component
-    ReactDOM.render(<ItemList items={items} />, document.getElementById('root'));
+    const Detail = ({ item, onChange, onClear }) => (
+      <div className="movie-card">
+        <h2>Edit Movie Details</h2>
+        <form>
+          <label>Title</label>
+          <input type="text" value={item.title} onChange={e => onChange('title', e.target.value)} />
+          <label>Director</label>
+          <input type="text" value={item.director} onChange={e => onChange('director', e.target.value)} />
+          <label>Year</label>
+          <input type="number" value={item.year} onChange={e => onChange('year', e.target.value)} />
+          <label>Genre</label>
+          <input type="text" value={item.genre} onChange={e => onChange('genre', e.target.value)} />
+          <label>Rating</label>
+          <input type="number" step="0.1" value={item.rating} onChange={e => onChange('rating', e.target.value)} />
+          <label>Duration</label>
+          <input type="number" value={item.duration} onChange={e => onChange('duration', e.target.value)} />
+          <label>Synopsis</label>
+          <input type="text" value={item.synopsis} onChange={e => onChange('synopsis', e.target.value)} />
+          <button type="button" className="clear-btn" onClick={onClear}>Clear</button>
+        </form>
+      </div>
+    );
+
+    const App = () => {
+      const [selectedItem, setSelectedItem] = React.useState(null);
+
+      const handleSelectItem = (item) => {
+        setSelectedItem(item);
+      };
+
+      const handleChange = (field, value) => {
+        setSelectedItem({ ...selectedItem, [field]: value });
+      };
+
+      const handleClear = () => {
+        setSelectedItem(null);
+      };
+
+      return (
+        <div className="content">
+          <div className="movie-list">
+            <ItemList items={items} onSelect={handleSelectItem} />
+          </div>
+          <div className="movie-detail">
+            {selectedItem && (
+              <Detail item={selectedItem} onChange={handleChange} onClear={handleClear} />
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('movie-list'));
   </script>
 </body>
 </html>
