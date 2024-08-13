@@ -3,102 +3,11 @@
 <head>
   <title>Movie Database</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      max-width: 1200px;
-      width: 100%;
-    }
-    .header {
-      width: 100%;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .content {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      gap: 20px;
-    }
-    .movie-list, .movie-detail {
-      flex: 1;
-      margin: 0 10px;
-    }
-    .movie-card {
-      background-color: #fff;
-      margin-bottom: 20px;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .movie-card:hover {
-      background-color: #f9f9f9;
-    }
-    .movie-detail .movie-card {
-      cursor: default;
-    }
-    .movie-detail form {
-      display: flex;
-      flex-direction: column;
-    }
-    .movie-detail label {
-      margin-top: 10px;
-    }
-    .movie-detail input {
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    .movie-detail button {
-      margin-top: 20px;
-      padding: 10px 15px;
-      background-color: #3498db;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .movie-detail button:hover {
-      background-color: #2980b9;
-    }
-    .movie-detail h2 {
-      margin: 0 0 20px;
-    }
-    .movie-card h2, .movie-card p {
-      margin: 0 0 10px;
-    }
-    .rating i {
-      color: gold;
-    }
-    .clear-btn {
-      background-color: #e74c3c;
-    }
-    .clear-btn:hover {
-      background-color: #c0392b;
-    }
-  </style>
+  
   <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="/styles/home.css">
 </head>
 <body>
   <div class="container">
@@ -111,7 +20,13 @@
     </div>
   </div>
   <script type="text/babel">
-    const items = <%- items %>;
+    const { useState, useEffect } = React;
+
+    const fetchItems = async () => {
+      const response = await fetch('/api/movies');
+      const data = await response.json();
+      return data;
+    };
 
     const Item = ({ item, onSelect }) => (
       <div className="movie-card" onClick={() => onSelect(item)}>
@@ -132,7 +47,7 @@
       </div>
     );
 
-    const Detail = ({ item, onChange, onClear }) => (
+    const Detail = ({ item, onChange, onSave, onDelete, onClear }) => (
       <div className="movie-card">
         <h2>Edit Movie Details</h2>
         <form>
@@ -150,13 +65,24 @@
           <input type="number" value={item.duration} onChange={e => onChange('duration', e.target.value)} />
           <label>Synopsis</label>
           <input type="text" value={item.synopsis} onChange={e => onChange('synopsis', e.target.value)} />
+          <button type="button" className="save-btn" onClick={onSave}>Save</button>
+          <button type="button" className="delete-btn" onClick={onDelete}>Delete</button>
           <button type="button" className="clear-btn" onClick={onClear}>Clear</button>
         </form>
       </div>
     );
 
     const App = () => {
-      const [selectedItem, setSelectedItem] = React.useState(null);
+      const [items, setItems] = useState([]);
+      const [selectedItem, setSelectedItem] = useState(null);
+
+      useEffect(() => {
+        const loadItems = async () => {
+          const data = await fetchItems();
+          setItems(data);
+        };
+        loadItems();
+      }, []);
 
       const handleSelectItem = (item) => {
         setSelectedItem(item);
@@ -166,19 +92,55 @@
         setSelectedItem({ ...selectedItem, [field]: value });
       };
 
+      const handleSave = async () => {
+        const method = selectedItem._id ? 'PUT' : 'POST';
+        const response = await fetch(`/api/movies${selectedItem._id ? `/${selectedItem._id}` : ''}`, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(selectedItem),
+        });
+        const data = await response.json();
+        setItems(prevItems => {
+          const newItems = prevItems.filter(item => item._id !== data._id);
+          return [...newItems, data];
+        });
+        setSelectedItem(null);
+      };
+
+      const handleDelete = async () => {
+        if (selectedItem._id) {
+          await fetch(`/api/movies/${selectedItem._id}`, { method: 'DELETE' });
+          setItems(prevItems => prevItems.filter(item => item._id !== selectedItem._id));
+          setSelectedItem(null);
+        }
+      };
+
       const handleClear = () => {
         setSelectedItem(null);
       };
 
       return (
-        <div className="content">
-          <div className="movie-list">
-            <ItemList items={items} onSelect={handleSelectItem} />
+        <div className="container">
+          <div className="header">
+            <h1>Movie Database</h1>
           </div>
-          <div className="movie-detail">
-            {selectedItem && (
-              <Detail item={selectedItem} onChange={handleChange} onClear={handleClear} />
-            )}
+          <div className="content">
+            <div className="movie-list">
+              <ItemList items={items} onSelect={handleSelectItem} />
+            </div>
+            <div className="movie-detail">
+              {selectedItem && (
+                <Detail
+                  item={selectedItem}
+                  onChange={handleChange}
+                  onSave={handleSave}
+                  onDelete={handleDelete}
+                  onClear={handleClear}
+                />
+              )}
+            </div>
           </div>
         </div>
       );
