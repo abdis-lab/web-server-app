@@ -54,10 +54,25 @@ app.get('/detail/:id', async (req, res) => {
 });
 
 // API route to get all movies
-app.get('/api/movies', async (req, res) => {
+app.post('/api/movies', async (req, res) => {
   try {
-    const movies = await Movie.find();
-    res.status(200).json(movies);
+    const { _id, title, director, year, genre, rating, duration, synopsis } = req.body;
+    if (!_id) {
+      const newMovie = new Movie({ title, director, year, genre, rating, duration, synopsis });
+      await newMovie.save();
+      res.status(201).json(newMovie);
+    } else {
+      const updatedMovie = await Movie.findByIdAndUpdate(
+        _id,
+        { title, director, year, genre, rating, duration, synopsis },
+        { new: true, runValidators: true }
+      );
+      if (updatedMovie) {
+        res.status(200).json(updatedMovie);
+      } else {
+        res.status(404).json({ error: 'Movie not found' });
+      }
+    }
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error', message: err.message });
   }

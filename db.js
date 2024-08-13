@@ -3,11 +3,18 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/webServerDb';
+console.log("MONGO_URI:", process.env.MONGO_URI);
+// if (!process.env.MONGO_URI) {
+//   throw new Error('MONGO_URI is not defined. Please check your .env file.');
+// }
+console.log('MONGO_URI:', process.env.MONGO_URI);
+console.log('Environment Variables:', process.env);
 
-if (!uri) {
-  throw new Error('MONGO_URI is not defined. Please check your .env file.');
-}
+const uri = process.env.MONGO_URI;
+
+// if (!uri) {
+//   throw new Error('MONGO_URI is not defined. Please check your .env file.');
+// }
 
 mongoose.connect(uri);
 

@@ -19,6 +19,7 @@
       <div class="movie-detail" id="movie-detail"></div>
     </div>
   </div>
+
   <script type="text/babel">
     const { useState, useEffect } = React;
 
@@ -49,7 +50,7 @@
 
     const Detail = ({ item, onChange, onSave, onDelete, onClear }) => (
       <div className="movie-card">
-        <h2>Edit Movie Details</h2>
+        <h2>{item._id ? 'Edit Movie Details' : 'Add New Movie'}</h2>
         <form>
           <label>Title</label>
           <input type="text" value={item.title} onChange={e => onChange('title', e.target.value)} />
@@ -65,8 +66,8 @@
           <input type="number" value={item.duration} onChange={e => onChange('duration', e.target.value)} />
           <label>Synopsis</label>
           <input type="text" value={item.synopsis} onChange={e => onChange('synopsis', e.target.value)} />
-          <button type="button" className="save-btn" onClick={onSave}>Save</button>
-          <button type="button" className="delete-btn" onClick={onDelete}>Delete</button>
+          <button type="button" className="save-btn" onClick={onSave}>{item._id ? 'Save Changes' : 'Add Movie'}</button>
+          {item._id && <button type="button" className="delete-btn" onClick={onDelete}>Delete</button>}
           <button type="button" className="clear-btn" onClick={onClear}>Clear</button>
         </form>
       </div>
@@ -121,10 +122,23 @@
         setSelectedItem(null);
       };
 
+      const handleAddNew = () => {
+        setSelectedItem({
+          title: '',
+          director: '',
+          year: '',
+          genre: '',
+          rating: '',
+          duration: '',
+          synopsis: ''
+        });
+      };
+
       return (
         <div className="container">
           <div className="header">
-            <h1>Movie Database</h1>
+            <h1>Movies</h1>
+            <button className="add-new-btn" onClick={handleAddNew}>Add New Movie</button>
           </div>
           <div className="content">
             <div className="movie-list">
