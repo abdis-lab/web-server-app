@@ -39,6 +39,18 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.get('/api/movies', async (req, res) => {
+  try {
+    const movies = await Movie.find();
+    console.log("Fetched movies:", movies);  // Debugging line
+    res.status(200).json(movies);
+  } catch (err) {
+    console.error("Error fetching movies:", err.message);  // Debugging line
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
+  }
+});
+
+
 // Route to render detail page for a specific movie
 app.get('/detail/:id', async (req, res) => {
   try {

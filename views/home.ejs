@@ -24,10 +24,19 @@
     const { useState, useEffect } = React;
 
     const fetchItems = async () => {
-      const response = await fetch('/api/movies');
-      const data = await response.json();
-      return data;
-    };
+  try {
+    const response = await fetch('/api/movies');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch movies:", error);
+    return []; // Return an empty array to avoid breaking the UI
+  }
+};
+
 
     const Item = ({ item, onSelect }) => (
       <div className="movie-card" onClick={() => onSelect(item)}>
